@@ -10,14 +10,11 @@ const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REDIRECT_URI = process.env.REDIRECT_URI;
 // app.METHOD(PATH, HANDLER)
 
-
-
 app.get('/', (req, res) => {
     const data = {
         name: 'Hello',
         isAwesome: true
     };
-
     res.json(data);
 });
 
@@ -54,7 +51,7 @@ app.get('/login', (req, res) => {
 });
 
 /////////////////////////////////////////////////////////
-// Use Auth Code to request Auth Token
+// Use Auth Code to request Access Token
 /////////////////////////////////////////////////////////
 
 app.get('/callback', (req, res) => {
@@ -76,23 +73,39 @@ app.get('/callback', (req, res) => {
         .then(response => {
             if (response.status === 200) {
                 
+                
+
+                const { access_token, refresh_token } = response.data;
+                const queryParams = querystring.stringify({
+                    access_token,
+                    refresh_token
+                })
+
+                // Redirect to React app
+                res.redirect(`http://localhost:3000/?${queryParams}`)
+
+                // Pass along tokens in query params
+
+
+
+
+
+
                 /////////////////////////////////////////////////////////
                 // Use Access Token to request data from Spotify
                 /////////////////////////////////////////////////////////
 
-                const { access_token, token_type } = response.data;
-
-                axios.get('https://api.spotify.com/v1/me', {
-                    headers: {
-                        Authorization: `${token_type} ${access_token}`
-                    }
-                })
-                    .then(response => {
-                        res.send(`<pre>${JSON.stringify(response.data, null, 2)}</pre>`);
-                    })
-                    .catch(error => {
-                        res.send(error);
-                    })
+                // axios.get('https://api.spotify.com/v1/me', {
+                //     headers: {
+                //         Authorization: `${token_type} ${access_token}`
+                //     }
+                // })
+                //     .then(response => {
+                //         res.send(`<pre>${JSON.stringify(response.data, null, 2)}</pre>`);
+                //     })
+                //     .catch(error => {
+                //         res.send(error);
+                //     })
 
                 ////////////////////////////////////////////////////////
                 // Test Refresh Token
@@ -107,9 +120,10 @@ app.get('/callback', (req, res) => {
                 //     .catch(error => {
                 //         res.send(error);
                 //     });
-                
+
             } else {
-                res.send(response);
+                res.redirect(`/?${querystring.stringify({error:
+                'invalid_token'})}`);
             }
 
 
